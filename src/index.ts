@@ -8,6 +8,7 @@ import cors from "cors";
 import authRouter from "./routes/Auth/auth.routes";
 import experienceRouter from "./routes/Experience/experience.route";
 import documentRouter from "./routes/Document/document.route";
+import announcementRoutes from './routes/Announcement/announcement.routes';
 
 
 
@@ -32,6 +33,7 @@ app.get("/",(req,res)=>{
 app.use("/api/v1/auth",authRouter);
 app.use("/api/v1/experience",experienceRouter);
 app.use("/api/v1/document",documentRouter);
+app.use('/api/v1/announcements', announcementRoutes);
 
 
 
