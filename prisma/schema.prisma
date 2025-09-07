@@ -42,6 +42,7 @@ model Student {
   regNo            String         @unique
   email            String         @unique
   password         String
+  phone            String?
   profileImg       String?
   branch           Branches?
   graduationYear   Int?
