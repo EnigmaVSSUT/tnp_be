@@ -64,10 +64,13 @@ export const adminSignUp = async (request: Request, response: Response) => {
       newAdmin: newAdmin,
       token: token,
     });
-  } catch (error) {    
+  } catch (error) {  
+    console.error("!!! --- CRITICAL ERROR IN adminSignUp CATCH BLOCK --- !!!");
+    console.error(error);
     response.status(500).json({
       messsage: "Internal Server Error",
       error: error,
+      
     });
   }
 };
@@ -122,7 +125,7 @@ export const adminSignIn = async (request: Request, response: Response) => {
     }
 
     const token = jwt.sign(
-      {id:existAdmin.id, name, email, role:"ADMIN" },
+      {id:existAdmin.id,name:existAdmin.name,email:existAdmin.email, role:"ADMIN" },
       process.env.JWT_SECRET!,
       {
         expiresIn: "30days",
@@ -138,7 +141,9 @@ export const adminSignIn = async (request: Request, response: Response) => {
         userName: existAdmin.name        
       },
     });
-  } catch (error) {    
+  } catch (error) {
+    console.error("!!! --- CRITICAL ERROR IN adminSignUp CATCH BLOCK --- !!!");
+    console.error(error);    
     return response.status(500).json({
       message: "Internal Server Error",
       error: error
