@@ -4,6 +4,8 @@ import { PrismaClient } from "../../generated/prisma";
 const prisma = new PrismaClient();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { studentLoginSchema, studentSignupSchema } from "../../validator/auth.validator";
+import ApiError from "../../utils/Handlers/apiError";
 
 enum Branches {}
 
@@ -20,36 +22,21 @@ const branchEnum = z.enum([
 
 export const studentSignUp = async (request: Request, response: Response) => {
   try {
-    const schema = z.object({
-      name: z.string().min(10).max(60),
-      email: z.string().email(),
-      regNo: z.string().length(10),
-      password: z
-        .string()
-        .min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
-          message:
-            "Password must include uppercase, lowercase, number, and special character",
-        })
-        .max(16),
-      profileImg: z.string().url().optional(),
-      branch: branchEnum,
-      graduationYear: z.number().min(2020).max(2035),
-      cgpa: z.number().min(0).max(10),
-    });
-    const results = schema.safeParse(request.body);
+    const results = studentSignupSchema.safeParse(request.body);
     if (!results.success) {
-      response.status(400).json({
-        message: results.error,
-      });
-      return;
+      const fieldErrors = results.error.flatten().fieldErrors;
+      throw new ApiError(
+        "validation",
+        "Invalid request data",
+        fieldErrors,
+        422
+      );
     }
     const {
       name,
       email,
       password,
       regNo,
-      profileImg,
       branch,
       graduationYear,
       cgpa,
@@ -73,7 +60,6 @@ export const studentSignUp = async (request: Request, response: Response) => {
         email,
         password: hashedStudentPassword,
         regNo,
-        profileImg: typeof profileImg === "string" ? profileImg : null,
         branch,
         graduationYear,
         cgpa,
@@ -98,14 +84,12 @@ export const studentSignUp = async (request: Request, response: Response) => {
     response.status(201).json({
       message: "New Student Created successfully",
       student: {
-        id: newStudent.id,
         name: newStudent.name,
         email: newStudent.email,
         regNo: newStudent.regNo,
         branch: newStudent.branch,
         graduationYear: newStudent.graduationYear,
         cgpa: newStudent.cgpa,
-        profileImg: newStudent.profileImg,
       },
       token: token,
     });
@@ -120,19 +104,7 @@ export const studentSignUp = async (request: Request, response: Response) => {
 
 export const studentSignIn = async (request: Request, response: Response) => {
   try {
-    const schema = z.object({
-      email: z.string().email(),
-      password: z
-        .string()
-        .min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
-          message:
-            "Password must include uppercase, lowercase, number, and special character",
-        })
-        .max(47),
-    });
-
-    const result = schema.safeParse(request.body);
+    const result = studentLoginSchema.safeParse(request.body);
     if (!result.success) {
       response.status(400).json({
         message: "Validation failed",

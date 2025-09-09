@@ -4,35 +4,28 @@ import { PrismaClient } from "../../generated/prisma";
 const prisma = new PrismaClient();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { loginSchema, signupSchema } from "../../validator/auth.validator";
+import ApiError from "../../utils/Handlers/apiError";
 
 export const adminSignUp = async (request: Request, response: Response) => {
   try {
-    const schema = z.object({
-      name: z.string().min(10).max(60),
-      email: z.string().email(),
-      password: z
-        .string()
-        .min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
-          message:
-            "Password must include uppercase, lowercase, number, and special character",
-        })
-        .max(16),      
-    });
-    const results = schema.safeParse(request.body);
+    const results = signupSchema.safeParse(request.body);
     if (!results.success) {
-      response.status(400).json({
-        message: results.error,
-      });
-      return;
+      const fieldErrors = results.error.flatten().fieldErrors;
+      throw new ApiError(
+        "validation",
+        "Invalid request data",
+        fieldErrors,
+        422
+      );
     }
     const { name, email, password } = results.data;
     const hashedAdminPassword = bcrypt.hashSync(password, 10);
     const existingAdmin = await prisma.admin.findFirst({
-      where:{
-        email
-      }
-    })
+      where: {
+        email,
+      },
+    });
     if (existingAdmin) {
       response.status(409).json({
         message: "User already exists",
@@ -44,7 +37,7 @@ export const adminSignUp = async (request: Request, response: Response) => {
       data: {
         name,
         email,
-        password: hashedAdminPassword
+        password: hashedAdminPassword,
       },
     });
     if (!newAdmin) {
@@ -52,19 +45,20 @@ export const adminSignUp = async (request: Request, response: Response) => {
         message: "Failed to create new Admin",
       });
     }
-   const token = jwt.sign(
-      {id:newAdmin.id, name, email, role:"ADMIN" },
+    const token = jwt.sign(
+      { id: newAdmin.id, name, email, role: "ADMIN" },
       process.env.JWT_SECRET!,
       {
         expiresIn: "30days",
       }
-    );    
+    );
     response.status(200).json({
       message: "New Admin Created successfully",
-      newAdmin: newAdmin,
+      name: newAdmin.name,
+      email: newAdmin.email,
       token: token,
     });
-  } catch (error) {    
+  } catch (error) {
     response.status(500).json({
       messsage: "Internal Server Error",
       error: error,
@@ -74,20 +68,7 @@ export const adminSignUp = async (request: Request, response: Response) => {
 
 export const adminSignIn = async (request: Request, response: Response) => {
   try {
-    
-    const schema = z.object({
-      email: z.string().email(),
-      password: z
-        .string()
-        .min(8)
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
-          message:
-            "Password must include uppercase, lowercase, number, and special character",
-        })
-        .max(47),
-    });
-
-    const result = schema.safeParse(request.body);
+    const result = loginSchema.safeParse(request.body);
     if (!result.success) {
       response.status(400).json({
         message: "Validation failed",
@@ -95,9 +76,9 @@ export const adminSignIn = async (request: Request, response: Response) => {
       });
       return;
     }
-
+    
     const { email, password } = result.data;
-
+    
     const existAdmin = await prisma.admin.findUnique({
       where: { email },
     });
@@ -109,10 +90,7 @@ export const adminSignIn = async (request: Request, response: Response) => {
       return;
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      existAdmin.password
-    );
+    const isPasswordValid = await bcrypt.compare(password, existAdmin.password);
 
     if (!isPasswordValid) {
       response.status(401).json({
@@ -122,38 +100,34 @@ export const adminSignIn = async (request: Request, response: Response) => {
     }
 
     const token = jwt.sign(
-      {id:existAdmin.id, name, email, role:"ADMIN" },
+      { id: existAdmin.id,name: existAdmin.name, email, role: "ADMIN" },
       process.env.JWT_SECRET!,
       {
         expiresIn: "30days",
       }
-    );  
-   
+    );
+
     return response.status(200).json({
       message: "Admin Sign in successful",
       token,
       user: {
         id: existAdmin.id,
         userEmail: existAdmin.email,
-        userName: existAdmin.name        
+        userName: existAdmin.name,
       },
     });
-  } catch (error) {    
+  } catch (error) {
     return response.status(500).json({
       message: "Internal Server Error",
-      error: error
+      error: error,
     });
   }
 };
 
 export const updateAdminPassword = async (req: Request, res: Response) => {
   const { currentPassword, newPassword, id } = req.body;
-  
-  if (
-    !currentPassword?.trim() ||
-    !newPassword?.trim() ||
-    !id.trim()
-  ) {
+
+  if (!currentPassword?.trim() || !newPassword?.trim() || !id.trim()) {
     res.status(401).json({
       message: "All fields are required",
     });
@@ -162,7 +136,7 @@ export const updateAdminPassword = async (req: Request, res: Response) => {
   try {
     const admin = await prisma.admin.findUnique({
       where: {
-        id
+        id,
       },
     });
     if (!admin) {
@@ -171,23 +145,17 @@ export const updateAdminPassword = async (req: Request, res: Response) => {
       });
       return;
     }
-    const isMatch =  bcrypt.compareSync(
-      currentPassword,
-      admin.password
-    );
+    const isMatch = bcrypt.compareSync(currentPassword, admin.password);
     if (!isMatch) {
       res.status(401).json({
         message: "Invalid password",
       });
       return;
     }
-    const hashedPassword = bcrypt.hashSync(
-      newPassword,
-      10
-    );
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
     const response = await prisma.admin.update({
       where: {
-        id
+        id,
       },
       data: {
         password: hashedPassword,
@@ -199,12 +167,12 @@ export const updateAdminPassword = async (req: Request, res: Response) => {
       });
     }
     res.status(200).json({
-      message: "Successfully updated admin password"
-    })
-  } catch (error) {    
+      message: "Successfully updated admin password",
+    });
+  } catch (error) {
     res.status(500).json({
       message: "Internal srever error",
-      error: error
+      error: error,
     });
   }
 };

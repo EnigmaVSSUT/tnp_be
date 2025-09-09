@@ -11,13 +11,8 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url      = "mongodb+srv://patrasubhankar2205:Monty45@cluster0.mzhmc.mongodb.net/TnP_Platform?retryWrites=true&w=majority&appName=Cluster0"
+  url      = env("MONGO_URI")
 }
-
-// model User {
-//   id   String @id @default(auto()) @map("_id") @db.ObjectId
-//   name String
-// }
 
 model Admin {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -47,11 +42,14 @@ model Student {
   regNo            String         @unique
   email            String         @unique
   password         String
+  phone            String?
   profileImg       String?
   branch           Branches?
   graduationYear   Int?
   cgpa             Float?
+  activeBacklog    Int?
   profileCompleted Boolean        @default(false)
+  isVerified       Boolean        @default(false)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   documents        Documents[]
