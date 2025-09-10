@@ -9,6 +9,7 @@ import authRouter from "./routes/Auth/auth.routes";
 import experienceRouter from "./routes/Experience/experience.route";
 import documentRouter from "./routes/Document/document.route";
 import announcementRoutes from './routes/Announcement/announcement.routes';
+import profileRoutes from "./routes/students/profile.route";
 
 
 
@@ -34,7 +35,7 @@ app.use("/api/v1/auth",authRouter);
 app.use("/api/v1/experience",experienceRouter);
 app.use("/api/v1/document",documentRouter);
 app.use('/api/v1/announcements', announcementRoutes);
-
+app.use("/api/v1/student/profile",profileRoutes);
 
 
 
