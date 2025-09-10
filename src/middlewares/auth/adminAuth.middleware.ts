@@ -16,6 +16,7 @@ export const adminAuthValidation = (
   const token = authHeader.split(" ")[1] as string;
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    req.user = decoded;
     const role = decoded.role as string;
     if (role === "ADMIN") {
       next();
