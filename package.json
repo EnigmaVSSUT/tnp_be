@@ -1,24 +1,25 @@
 {
   "name": "tnp_be",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "tsc -b && node dist/index.js",
-    "generate": "npx prisma generate"
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "tsc -b && node dist/index.js"
   },
   "keywords": [],
   "author": "Gyanranjan Patra",
   "license": "ISC",
   "devDependencies": {
+    "@prisma/client": "^6.16.1",
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.3",
+    "@types/mongoose": "^5.11.96",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.0",
     "nodemon": "^3.1.10",
-    "prisma": "^6.15.0",
+    "prisma": "^6.16.1",
     "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.2"
   },
   "dependencies": {
