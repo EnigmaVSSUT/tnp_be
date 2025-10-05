@@ -1,0 +1,227 @@
+import { Request, Response } from "express";
+import z from "zod";
+import { PrismaClient } from "../../generated/prisma";
+const prisma = new PrismaClient();
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { studentLoginSchema, studentSignupSchema } from "../../validator/auth.validator";
+import ApiError from "../../utils/Handlers/apiError";
+
+enum Branches {}
+
+const branchEnum = z.enum([
+  "CSE",
+  "IT",
+  "CSE_AIML",
+  "PE",
+  "ETC",
+  "ME",
+  "CE",
+  "EE",
+]);
+
+export const studentSignUp = async (request: Request, response: Response) => {
+  try {
+    const results = studentSignupSchema.safeParse(request.body);
+    if (!results.success) {
+      const fieldErrors = results.error.flatten().fieldErrors;
+      throw new ApiError(
+        "validation",
+        "Invalid request data",
+        fieldErrors,
+        422
+      );
+    }
+    const {
+      name,
+      email,
+      password,
+      regNo,
+      branch,
+      graduationYear,
+      cgpa,
+    } = results.data;
+    const hashedStudentPassword = bcrypt.hashSync(password, 10);
+    const existingStudent = await prisma.student.findFirst({
+      where: {
+        email,
+      },
+    });
+    if (existingStudent) {
+      response.status(409).json({
+        message: "Student already exists",
+      });
+      return;
+    }
+
+    const newStudent = await prisma.student.create({
+      data: {
+        name,
+        email,
+        password: hashedStudentPassword,
+        regNo,
+        branch,
+        graduationYear,
+        cgpa,
+      },
+    });
+    if (!newStudent) {
+      response.status(500).json({
+        message: "Failed to create new Student",
+      });
+    }
+    const token = jwt.sign(
+      {
+        id: newStudent.id,
+        name: newStudent.name,
+        email: newStudent.email,
+        role: "STUDENT",
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: "30d" }
+    );
+
+    response.status(201).json({
+      message: "New Student Created successfully",
+      student: {
+        name: newStudent.name,
+        email: newStudent.email,
+        regNo: newStudent.regNo,
+        branch: newStudent.branch,
+        graduationYear: newStudent.graduationYear,
+        cgpa: newStudent.cgpa,
+      },
+      token: token,
+    });
+  } catch (error) {
+    console.error("STUDENT SIGNUP FAILED:", error);
+    response.status(500).json({
+      message: "Internal Server Error",
+      error: error,
+    });
+  }
+};
+
+export const studentSignIn = async (request: Request, response: Response) => {
+  try {
+    const result = studentLoginSchema.safeParse(request.body);
+    if (!result.success) {
+      response.status(400).json({
+        message: "Validation failed",
+        errors: result.error,
+      });
+      return;
+    }
+
+    const { email, password } = result.data;
+
+    const existingStudent = await prisma.student.findUnique({
+      where: { email },
+    });
+
+    if (!existingStudent) {
+      response.status(404).json({
+        message: "Student not found",
+      });
+      return;
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      existingStudent.password
+    );
+
+    if (!isPasswordValid) {
+      response.status(401).json({
+        message: "Invalid password",
+      });
+      return;
+    }
+
+    const token = jwt.sign(
+      {
+        id: existingStudent.id,
+        name: existingStudent.name,
+        email: existingStudent.email,
+        role: "STUDENT",
+      },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: "30d",
+      }
+    );
+
+    return response.status(200).json({
+      message: "Student Sign in successful",
+      token,
+      user: {
+        id: existingStudent.id,
+        name: existingStudent.name,
+        email: existingStudent.email,
+        regNo: existingStudent.regNo,
+        branch: existingStudent.branch,
+        graduationYear: existingStudent.graduationYear,
+        cgpa: existingStudent.cgpa,
+        profileImg: existingStudent.profileImg,
+      },
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: "Internal Server Error",
+      error: error,
+    });
+  }
+};
+
+export const updateStudentPassword = async (req: Request, res: Response) => {
+  const { currentPassword, newPassword, id } = req.body;
+
+  if (!currentPassword?.trim() || !newPassword?.trim() || !id.trim()) {
+    res.status(401).json({
+      message: "All fields are required",
+    });
+    return;
+  }
+  try {
+    const student = await prisma.student.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!student) {
+      res.status(401).json({
+        message: "No Student found",
+      });
+      return;
+    }
+    const isMatch = bcrypt.compareSync(currentPassword, student.password);
+    if (!isMatch) {
+      res.status(401).json({
+        message: "Invalid password",
+      });
+      return;
+    }
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    const response = await prisma.student.update({
+      where: {
+        id,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+    if (!response) {
+      res.status(400).json({
+        message: "Failed to update password",
+      });
+    }
+    res.status(200).json({
+      message: "Successfully updated student password",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Internal srever error",
+      error: error,
+    });
+  }
+};

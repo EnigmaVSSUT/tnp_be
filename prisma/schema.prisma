@@ -5,12 +5,9 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url      = env("DATABASE_URL")
+  url      = env("MONGO_URI")
 }
 
-///////////////////////////
-// ADMIN
-///////////////////////////
 model Admin {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
@@ -45,11 +42,14 @@ model Student {
   regNo            String         @unique
   email            String         @unique
   password         String
+  phone            String?
   profileImg       String?
   branch           Branches?
   graduationYear   Int?
   cgpa             Float?
+  activeBacklog    Int?
   profileCompleted Boolean        @default(false)
+  isVerified       Boolean        @default(false)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
@@ -86,9 +86,15 @@ model Document {
   uploadedAt DateTime @default(now())
 }
 
-///////////////////////////
-// EXPERIENCE
-///////////////////////////
+model Documents {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  student   Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String     @db.ObjectId @unique
+  documents Document[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
 enum ExpType {
   CERTIFICATION
   INTERNSHIP
@@ -103,9 +109,9 @@ model Experience {
   type         ExpType
   title        String
   organisation String
-  description  String
+  description  String?
   startDate    DateTime
-  endDate      DateTime
+  endDate      DateTime?
   technologies String[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -230,14 +236,19 @@ enum AudienceType {
   BATCH
 }
 
+type AnnouncementFilter {
+  branches        Branches[]
+  graduationYears Int[]
+}
+
 model Announcement {
-  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  id          String              @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String
   audience    AudienceType
-  filterData  Json?
-  createdBy   String       @db.ObjectId
-  admin       Admin        @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  filterData  AnnouncementFilter? 
+  createdBy   String              @db.ObjectId
+  admin       Admin               @relation(fields: [createdBy], references: [id])
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 }

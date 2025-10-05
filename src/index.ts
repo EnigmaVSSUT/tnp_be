@@ -2,6 +2,18 @@ require("dotenv").config();
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 
+//Routes Imports
+import authRouter from "./routes/Auth/auth.routes";
+import experienceRouter from "./routes/Experience/experience.route";
+import documentRouter from "./routes/Document/document.route";
+import announcementRoutes from './routes/Announcement/announcement.routes';
+import profileRoutes from "./routes/students/profile.route";
+
+
+
+//Initialisation
+const app = express();
+
 // Routes
 import authRouter from "./routes/Auth/auth.routes";
 import companyRouter from "./routes/Compony/compony.routes";
@@ -19,8 +31,13 @@ app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ message: "Welcome to TNP Backend" });
 });
 
+
 // Mount routers
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/experience",experienceRouter);
+app.use("/api/v1/document",documentRouter);
+app.use('/api/v1/announcements', announcementRoutes);
+app.use("/api/v1/student/profile",profileRoutes);
 app.use("/api/v1/companies", companyRouter);
 app.use("/api/v1/applications", applicationRouter); // ✅ added
 app.use("/api/v1/analytics", analyticsRouter);      // ✅ added

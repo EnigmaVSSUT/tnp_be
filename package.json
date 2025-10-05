@@ -14,6 +14,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.3",
     "@types/mongoose": "^5.11.96",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.0",
     "nodemon": "^3.1.10",
     "prisma": "^6.16.1",
@@ -22,24 +23,17 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.883.0",
+    "@aws-sdk/s3-request-presigner": "^3.879.0",
+    "@prisma/client": "^6.15.0",
     "@types/cors": "^2.8.19",
     "@types/dotenv": "^8.2.3",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "express-async-handler": "^1.2.0",
-    "mongodb": "^6.19.0",
-    "mongoose": "^8.18.0",
+    "jsonwebtoken": "^9.0.2",
     "zod": "^4.1.5"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Gyannnnn/tnp_be.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Gyannnnn/tnp_be/issues"
-  },
-  "homepage": "https://github.com/Gyannnnn/tnp_be#readme",
-  "description": ""
+  }
 }
