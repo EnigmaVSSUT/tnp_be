@@ -8,6 +8,9 @@ datasource db {
   url      = env("MONGO_URI")
 }
 
+///////////////////////////
+// ADMIN
+///////////////////////////
 model Admin {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
@@ -37,10 +40,10 @@ enum Branches {
 // STUDENT
 ///////////////////////////
 model Student {
-  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
   name             String
-  regNo            String         @unique
-  email            String         @unique
+  regNo            String    @unique
+  email            String    @unique
   password         String
   phone            String?
   profileImg       String?
@@ -48,15 +51,15 @@ model Student {
   graduationYear   Int?
   cgpa             Float?
   activeBacklog    Int?
-  profileCompleted Boolean        @default(false)
-  isVerified       Boolean        @default(false)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  profileCompleted Boolean   @default(false)
+  isVerified       Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  documents        Document[]
-  experiences      Experience[]
-  applications     Application[]
-  notifications    Notification[]
+  documents     Document[]     @relation("StudentDocuments")
+  experiences   Experience[]
+  applications  Application[]
+  notifications Notification[]
 
   @@index([branch, graduationYear])
 }
@@ -75,7 +78,7 @@ enum DocType {
 
 model Document {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student    Student  @relation("StudentDocuments", fields: [studentId], references: [id], onDelete: Cascade)
   studentId  String   @db.ObjectId
   type       DocType
   url        String
@@ -86,15 +89,9 @@ model Document {
   uploadedAt DateTime @default(now())
 }
 
-model Documents {
-  id        String     @id @default(auto()) @map("_id") @db.ObjectId
-  student   Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studentId String     @db.ObjectId @unique
-  documents Document[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-}
-
+///////////////////////////
+// EXPERIENCE
+///////////////////////////
 enum ExpType {
   CERTIFICATION
   INTERNSHIP
@@ -103,9 +100,9 @@ enum ExpType {
 }
 
 model Experience {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studentId    String   @db.ObjectId
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  student      Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId    String    @db.ObjectId
   type         ExpType
   title        String
   organisation String
@@ -113,8 +110,8 @@ model Experience {
   startDate    DateTime
   endDate      DateTime?
   technologies String[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 ///////////////////////////
@@ -154,8 +151,8 @@ model JobListing {
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
-  applications  Application[]
-  analytics     Analytic[]
+  applications Application[]
+  analytics    Analytic[]
 }
 
 ///////////////////////////
@@ -171,14 +168,14 @@ enum ApplicationStatus {
 }
 
 model Application {
-  id         String      @id @default(auto()) @map("_id") @db.ObjectId
-  student    Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studentId  String      @db.ObjectId
-  jobListing JobListing  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  jobId      String      @db.ObjectId
+  id         String            @id @default(auto()) @map("_id") @db.ObjectId
+  student    Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId  String            @db.ObjectId
+  jobListing JobListing        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId      String            @db.ObjectId
   status     ApplicationStatus
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
 }
 
 ///////////////////////////
@@ -199,18 +196,18 @@ model Notification {
 // COMPANY + ANALYTIC
 ///////////////////////////
 model Company {
-  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   description   String
   industry      String
   website       String
   contactPerson String
   contactEmail  String
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  jobListings   JobListing[]
-  analytics     Analytic[]
+  jobListings JobListing[]
+  analytics   Analytic[]
 }
 
 model Analytic {
@@ -246,7 +243,7 @@ model Announcement {
   title       String
   description String
   audience    AudienceType
-  filterData  AnnouncementFilter? 
+  filterData  AnnouncementFilter?
   createdBy   String              @db.ObjectId
   admin       Admin               @relation(fields: [createdBy], references: [id])
   createdAt   DateTime            @default(now())
