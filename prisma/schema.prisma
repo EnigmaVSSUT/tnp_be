@@ -79,7 +79,7 @@ enum DocType {
 model Document {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   student    Student  @relation("StudentDocuments", fields: [studentId], references: [id], onDelete: Cascade)
-  studentId  String   @db.ObjectId @unique
+  studentId  String   @db.ObjectId
   type       DocType
   url        String
   fileName   String
@@ -87,6 +87,8 @@ model Document {
   mimeType   String
   isVerified Boolean  @default(false)
   uploadedAt DateTime @default(now())
+
+  @@unique([studentId, type])
 }
 
 ///////////////////////////

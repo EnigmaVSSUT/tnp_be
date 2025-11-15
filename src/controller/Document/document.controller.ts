@@ -104,8 +104,10 @@ export const addDocumentMetadata = asyncHandler(
 
     const studentDocuments = await prisma.document.upsert({
       where: {
-        studentId,
-        type: documentData.type,
+        studentId_type: {
+          studentId,
+          type: documentData.type,
+        },
       },
       create: {
         studentId,
