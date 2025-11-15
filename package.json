@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "start": "tsc -b && node dist/index.js"
+    "start": "npm run build && node dist/index.js",
+    "build": "tsc -b && npm run copy:prisma",
+    "copy:prisma": "node ./scripts/copyPrisma.js"
   },
   "keywords": [],
   "author": "Gyanranjan Patra",
