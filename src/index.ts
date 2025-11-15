@@ -8,17 +8,11 @@ import experienceRouter from "./routes/Experience/experience.route";
 import documentRouter from "./routes/Document/document.route";
 import announcementRoutes from './routes/Announcement/announcement.routes';
 import profileRoutes from "./routes/students/profile.route";
-
-
-
-//Initialisation
-const app = express();
-
-// Routes
-import authRouter from "./routes/Auth/auth.routes";
 import companyRouter from "./routes/Compony/compony.routes";
 import applicationRouter from "./routes/Admin/application.routes"; // ✅ new
 import analyticsRouter from "./routes/Admin/analytics.routes";     // ✅ new
+import jobRoutes from "./routes/job/job.routes"; 
+import applicationRoutes from "./routes/job/application.routes";
 
 const app: Application = express();
 
@@ -41,6 +35,9 @@ app.use("/api/v1/student/profile",profileRoutes);
 app.use("/api/v1/companies", companyRouter);
 app.use("/api/v1/applications", applicationRouter); // ✅ added
 app.use("/api/v1/analytics", analyticsRouter);      // ✅ added
+app.use("/api/jobs", jobRoutes);
+app.use("/api/applications", applicationRoutes);
+
 
 // 404 handler
 app.use((req: Request, res: Response) => {
