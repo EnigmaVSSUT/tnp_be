@@ -55,8 +55,8 @@ model Student {
   isVerified       Boolean   @default(false)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-
-  documents     Document[]     @relation("StudentDocuments")
+  
+  documents     Document[] 
   experiences   Experience[]
   applications  Application[]
   notifications Notification[]
@@ -76,17 +76,28 @@ enum DocType {
   OTHER
 }
 
-model Document {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  student    Student  @relation("StudentDocuments", fields: [studentId], references: [id], onDelete: Cascade)
-  studentId  String   @db.ObjectId
+type DocumentData {
   type       DocType
   url        String
   fileName   String
   fileSize   Int
   mimeType   String
-  isVerified Boolean  @default(false)
-  uploadedAt DateTime @default(now())
+}
+
+model Document {
+  id         String           @id @default(auto()) @map("_id") @db.ObjectId
+  student    Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId  String           @db.ObjectId
+  type       DocType
+  url        String
+  fileName   String
+  fileSize   Int
+  mimeType   String
+  documents  DocumentData[]
+  isVerified Boolean          @default(false)
+  uploadedAt DateTime         @default(now())
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 }
 
 ///////////////////////////

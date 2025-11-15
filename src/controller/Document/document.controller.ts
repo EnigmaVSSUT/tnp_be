@@ -15,14 +15,31 @@ const presignSchema = z.object({
     fileType: z.string().min(1),
 });
 
+// const addDocumentSchema=z.object({
+//     s3Key:z.string(),
+//     fileName: z.string(),
+//     fileSize: z.number(),
+//     mimeType: z.string(),
+//     type: z.enum(["tenthCertificate", "twelthCertificate", "recentMarksheet", "identityCard", "certification", "other"]),
+
+// })
+
 const addDocumentSchema=z.object({
     s3Key:z.string(),
     fileName: z.string(),
     fileSize: z.number(),
     mimeType: z.string(),
     type: z.enum(["tenthCertificate", "twelthCertificate", "recentMarksheet", "identityCard", "certification", "other"]),
-
 })
+
+const docTypeMap: Record<string, string> = {
+    tenthCertificate: "TENTH_CERTIFICATE",
+    twelthCertificate: "TWELFTH_CERTIFICATE",
+    recentMarksheet: "RECENT_MARKSHEET",
+    identityCard: "IDENTITY_CARD",
+    certification: "CERTIFICATION",
+    other: "OTHER",
+}
 
 
 
@@ -71,30 +88,26 @@ export const addDocumentMetadata=asyncHandler(async(req:Request,res:Response)=>{
         throw new ApiError("validation", "Validation failed", validation.error.flatten().fieldErrors, 422);
     }
 
-    //Student->Documents .... Document -> Document []
     const documentData={
-        type:validation.data.type,
+        type: docTypeMap[validation.data.type] as any,
         url: validation.data.s3Key, 
         fileName: validation.data.fileName,
         fileSize: validation.data.fileSize,
         mimeType: validation.data.mimeType,
-
     }
 
-    const studentDocuments = await prisma.documents.upsert({
-        where: { studentId: studentId },
-        update: {
-            documents: {
-                push: documentData,
-            },
-        },
-        create: {
-            studentId: studentId,
+    const studentDocuments = await prisma.document.create({
+        data: {
+            student: { connect: { id: studentId } },
+            type: documentData.type as any,
+            url: documentData.url,
+            fileName: documentData.fileName,
+            fileSize: documentData.fileSize,
+            mimeType: documentData.mimeType,
             documents: [documentData],
         },
-    })
+    });
 
     const response = ApiResponse.success(studentDocuments, { message: "Document metadata saved successfully" }, 201);
     return res.status(response.statusCode).json(response.body);
 })
-
