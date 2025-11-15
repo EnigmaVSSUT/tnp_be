@@ -79,7 +79,7 @@ enum DocType {
 model Document {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   student    Student  @relation("StudentDocuments", fields: [studentId], references: [id], onDelete: Cascade)
-  studentId  String   @db.ObjectId
+  studentId  String   @db.ObjectId @unique
   type       DocType
   url        String
   fileName   String
